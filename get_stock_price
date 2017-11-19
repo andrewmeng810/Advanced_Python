@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+"""
+ticker.py -- python script to retrieve stock price from website,
+            and display result on webpage
+Author: Qi Meng
+Last modified date: 2017-10-29
+
+"""
+
+
+import cgi
+import datetime
+form = cgi.FieldStorage()
+
+stock_symbol = form.getvalue("ticker")
+
+
+def get_price(symbol):
+    """ Retrieve stock price from Yahoo Finance """
+    import urllib.request, urllib.parse, urllib.error
+
+    base_url = "http://finance.yahoo.com/d/quotes.csv?s={}&f=sl1d1t1c1ohgv&e=.csv"
+    try:
+        readtext = urllib.request.urlopen( urllib.request.Request(base_url.format(symbol),
+                                           headers={'User-Agent': 'Mozilla'})).read()
+    except IOError:
+        exit('Error:  cannot connect')
+
+    if not readtext:
+        exit('Error:  stock symbol {} not found'.format(symbol))
+
+    current_price = str(readtext).split(',')[1]
+
+    return float(current_price)
+
+template = '/Users/Andrew/Desktop/htdocs/cgi-bin/stock_price.html'
+#template = 'http://127.0.0.1:8000/cgi-bin/stock_price.html'
+
+text = open(template).read()
+
+out_text = text.format(ticker=stock_symbol.upper(),
+                       price=get_price(stock_symbol),
+                       current_time = str(datetime.datetime.now())
+                       )
+
+print("Content-type:  text/html\n")
+
+print(out_text)  # print out the html result
